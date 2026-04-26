@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "sunbeam-6cnmq.ondigitalocean.app",
+    "sunbeampress.in"
 ]
 
 # AUTH_USER_MODEL = 'sunbeamapp.User'
@@ -135,8 +136,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
 
 # Redis cache for production rate limiting and shared cache
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/1")
@@ -150,13 +152,17 @@ CACHES = {
     }
 }
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'sunbeamapp.views.custom_exception_handler'
+}
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email Backend
-SENDGRID_API_KEY = os.getenv("SENDGRID_KEY")
+# SENDGRID_API_KEY = os.getenv("SENDGRID_KEY")
 DEFAULT_FROM_EMAIL = "deadryefield@gmail.com"
 
 EMAIL_HOST = "smtp.gmail.com"
@@ -173,6 +179,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://0.0.0.0:5174",
     "http://sunbeam-6cnmq.ondigitalocean.app",
     "https://sunbeamdigi.onrender.com",
+    "https://sunbeampress.in",
+    "http://sunbeampress.in",
 ]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
@@ -181,13 +189,15 @@ CSRF_TRUSTED_ORIGINS = [
     "http://0.0.0.0:5174",
     "http://sunbeam-6cnmq.ondigitalocean.app",
     "https://sunbeamdigi.onrender.com",
+    "https://sunbeampress.in",
+    "http://sunbeampress.in",
 ]
 
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+# CELERY_BROKER_URL = "redis://localhost:6379/0"
+# CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 
-CELERY_TASK_ALWAYS_EAGER = False
-CELERY_TIMEZONE = "Asia/Kolkata"
+# CELERY_TASK_ALWAYS_EAGER = False
+# CELERY_TIMEZONE = "Asia/Kolkata"
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_DOMAIN = None  # default, same host only

@@ -6,14 +6,23 @@ from django_ratelimit.decorators import ratelimit
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django_ratelimit.exceptions import Ratelimited
 from .serialisers import EmailSerializer, EmailSerializerQuotation
 
  # Debugging line to check URL patterns
-from rest_framework.views import APIView
-from rest_framework.response import Response
+
+
 from django.urls import URLPattern, URLResolver
 
+from rest_framework.views import exception_handler
+
+def custom_exception_handler(exc, context):
+    if isinstance(exc, Ratelimited):
+        return Response(
+            {"error": "Too many requests"},
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+    return exception_handler(exc, context)
 
 class APIRootView(APIView):
 
@@ -51,16 +60,28 @@ class SendEmailView(APIView):
 
     def post(self, request):
         print("works")
-        data = request.data
-        print(data)
+        print(request.data)
+
         serializer = EmailSerializer(data=request.data)
 
-
         if serializer.is_valid():
-            subject = "QUOTATION REQUEST"
-            message = serializer.validated_data["message"]
+            data = serializer.validated_data
+
+            subject = data.get("subject") or "Form Submission"
+
+            message = f"""
+                New Form Submission
+
+                Name: {data.get('name')}
+                Email: {data.get('email')}
+                Mobile: {data.get('mobile')}
+
+                Message:
+                {data.get('message')}
+                """
+
             from_email = settings.DEFAULT_FROM_EMAIL
-            to = ["deadryefield@gmail.com"]
+            to = data.get("to")  # uses default if not provided
 
             try:
                 send_mail(
@@ -71,13 +92,16 @@ class SendEmailView(APIView):
                     fail_silently=False,
                 )
                 return Response(
-                    {"success": "Email sent successfully."}, status=status.HTTP_200_OK
+                    {"success": "Email sent successfully."},
+                    status=status.HTTP_200_OK
                 )
             except Exception as e:
                 return Response(
-                    {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    {"error": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -88,8 +112,13 @@ class SendEmailQuotationView(APIView):
     def post(self, request):
         print("works")
         print(request.data)
+        data = request.data.copy()  # IMPORTANT: make it mutable
 
-        serializer = EmailSerializerQuotation(data=request.data)
+        # 🔥 FIX: convert empty string to None BEFORE serializer
+        if data.get("deadline") == "":
+            data["deadline"] = None
+
+        serializer = EmailSerializerQuotation(data=data)
 
         if serializer.is_valid():
             data = serializer.validated_data
@@ -101,17 +130,17 @@ class SendEmailQuotationView(APIView):
 
             Name: {data.get('name')}
             Email: {data.get('email')}
-            Mobile: {data.get('mobile')}
+            Phone: {data.get('phone')}
 
-            Address:
-            {data.get('address')}
+            Project: {data.get('project')}
+            Quantity: {data.get('quantity')}
+            Size: {data.get('size')}
 
-            Requirements:
-            {data.get('requirements')}
+            Details:
+            {data.get('details')}
 
-            Delivery Date: {data.get('deliveryDate')}
+            Deadline: {data.get('deadline')}
             """
-
             from_email = settings.DEFAULT_FROM_EMAIL
             to = ["deadryefield@gmail.com"]
 
