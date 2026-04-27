@@ -11,7 +11,7 @@ from .serialisers import EmailSerializer, EmailSerializerQuotation
 
  # Debugging line to check URL patterns
 
-
+import os
 from django.urls import URLPattern, URLResolver
 
 from rest_framework.views import exception_handler
@@ -81,7 +81,7 @@ class SendEmailView(APIView):
                 """
 
             from_email = settings.DEFAULT_FROM_EMAIL
-            to = data.get("to")  # uses default if not provided
+            to = data.get("to") or [os.getenv("EMAIL_TO")]
 
             try:
                 send_mail(
@@ -142,7 +142,8 @@ class SendEmailQuotationView(APIView):
             Deadline: {data.get('deadline')}
             """
             from_email = settings.DEFAULT_FROM_EMAIL
-            to = ["deadryefield@gmail.com"]
+            to_email =os.getenv("EMAIL_TO")
+            to = [to_email]
 
             try:
                 send_mail(

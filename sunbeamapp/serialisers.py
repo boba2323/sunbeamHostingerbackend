@@ -1,6 +1,6 @@
 # app/serializers.py
 from rest_framework import serializers
-
+import os
 class EmailSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100, required=False, allow_blank=True)
     mobile = serializers.CharField(max_length=20)
@@ -10,8 +10,7 @@ class EmailSerializer(serializers.Serializer):
 
     to = serializers.ListField(
         child=serializers.EmailField(),
-        required=False,
-        default=["deadryefield@gmail.com"]
+        required=False
     )
 class EmailSerializerQuotation(serializers.Serializer):
     name = serializers.CharField(max_length=100)
